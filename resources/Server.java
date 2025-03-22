@@ -11,6 +11,12 @@ public class Server {
 
     public static void main(String[] args) {
         try {
+                        // Configurar el keystore y el truststore
+            System.setProperty("javax.net.ssl.keyStore", "mykeystore.jks");
+            System.setProperty("javax.net.ssl.keyStorePassword", "Password123");
+            System.setProperty("javax.net.ssl.trustStore", "mytruststore.jks");
+            System.setProperty("javax.net.ssl.trustStorePassword", "Password123");
+            DBSetup.main(null); // Verifica o crea tabla al iniciar el servidor
             // Crear la conexión SSL con el servidor
             SSLServerSocketFactory factory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
             SSLServerSocket serverSocket = (SSLServerSocket) factory.createServerSocket(3343, 1000);  // 1000 es el backlog
@@ -23,6 +29,7 @@ public class Server {
             serverSocket.setEnabledCipherSuites(enabledCipherSuites);
 
             System.err.println("Waiting for connection...");
+
 
             while (true) {
                 try (SSLSocket socket = (SSLSocket) serverSocket.accept();
@@ -118,14 +125,14 @@ public class Server {
     }
 
     // Método para registrar un usuario en la base de datos con el salt y el hash de la contraseña
-    private static boolean registrarUsuario(String username, String password) {
+    public static boolean registrarUsuario(String username, String password) {
         String salt = generateSalt();
         String hashedPassword = hashPassword(password, salt);
 
         String insertQuery = "INSERT INTO usuarios (username, password, salt) VALUES (?, ?, ?)";
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement stmt = conn.prepareStatement(insertQuery)) {
+            PreparedStatement stmt = conn.prepareStatement(insertQuery)) {
 
             stmt.setString(1, username);
             stmt.setString(2, hashedPassword);
